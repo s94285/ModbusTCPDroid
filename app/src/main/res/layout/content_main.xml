@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.example.s94285.tcptest1.MainActivity"
+    tools:showIn="@layout/activity_main"
+
+    android:descendantFocusability="beforeDescendants"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
+    <!--  these are for preventing first edittext gain focus on startup-->
+
+<ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scrollbars="vertical"
+    android:scrollbarStyle="insideInset" >
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:ems="10"
+        android:hint="Port (502)"
+        android:id="@+id/input_port"
+        android:layout_below="@+id/input_IP"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_toLeftOf="@+id/button_connect"
+        android:layout_toStartOf="@+id/button_connect" />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:ems="10"
+        android:id="@+id/input_IP"
+        android:hint="IP (192.168.2.155)"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <Spinner
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/button_connect"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:id="@+id/spinner_dataType"
+        android:spinnerMode="dialog" />
+
+    <Button
+        android:text="connect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/input_IP"
+        android:layout_toLeftOf="@+id/button_disconnect"
+        android:layout_toStartOf="@+id/button_disconnect"
+        android:id="@+id/button_connect" />
+
+    <Button
+        android:text="disconnect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/button_disconnect"
+        android:layout_below="@+id/input_IP"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <RadioGroup
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/spinner_dataType"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:checkedButton="@+id/radio_readMB"
+        android:id="@+id/radioGroup_RW"
+        android:orientation="horizontal">
+
+            <RadioButton
+                android:text="Read"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/radio_readMB"
+                android:layout_weight="1" />
+
+            <RadioButton
+                android:text="Write"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/radio_writeMB"
+                android:layout_weight="1" />
+
+    </RadioGroup>
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:ems="10"
+        android:hint="Offset"
+        android:layout_below="@+id/radioGroup_RW"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:id="@+id/input_offset" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:ems="10"
+        android:layout_below="@+id/radioGroup_RW"
+        android:layout_toRightOf="@+id/input_offset"
+        android:layout_toEndOf="@+id/input_offset"
+        android:id="@+id/input_bit"
+        android:hint="Bit" />
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/input_offset"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+
+            <ToggleButton
+                android:text="ToggleButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/toggleButton_bit0" />
+
+            <ToggleButton
+                android:text="ToggleButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/toggleButton_bit1"
+                android:layout_weight="1" />
+
+            <ToggleButton
+                android:text="ToggleButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/toggleButton_bit2"
+                android:layout_weight="1" />
+
+            <ToggleButton
+                android:text="ToggleButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/toggleButton_bit3"
+                android:layout_weight="1" />
+        </LinearLayout>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+
+            <ToggleButton
+                android:text="ToggleButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/toggleButton_bit4" />
+
+            <ToggleButton
+                android:text="ToggleButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/toggleButton_bit5"
+                android:layout_weight="1" />
+
+            <ToggleButton
+                android:text="ToggleButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/toggleButton_bit6"
+                android:layout_weight="1" />
+
+            <ToggleButton
+                android:text="ToggleButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/toggleButton_bit7"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal"
+            android:ems="10"
+            android:id="@+id/input_decimal"
+            android:layout_weight="1"
+            android:hint="Value" />
+
+        <TextView
+            android:text="Result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/text_result"
+            app:layout_anchorGravity="center_vertical|center_horizontal"
+            android:layout_gravity="start"
+            android:textSize="30sp"
+
+            android:layout_weight="1" />
+    </LinearLayout>
+    </RelativeLayout>
+</ScrollView>
+
+</RelativeLayout>
