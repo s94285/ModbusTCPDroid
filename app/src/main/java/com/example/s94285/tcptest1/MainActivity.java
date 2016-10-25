@@ -9,10 +9,12 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -32,6 +34,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.serotonin.modbus4j.ModbusFactory;
 import com.serotonin.modbus4j.ModbusLocator;
 import com.serotonin.modbus4j.ModbusMaster;
+import com.serotonin.modbus4j.exception.ModbusInitException;
 import com.serotonin.modbus4j.ip.IpParameters;
 
 public class MainActivity extends AppCompatActivity {
@@ -59,8 +62,11 @@ public class MainActivity extends AppCompatActivity {
     private boolean refresh_on = false;
     private ModbusRW mbrw;
 
+    private AlertDialog AD;
+    private int refreshDelay;
+
     private static final String[] DATA_TYPE_SELECTIONS = {"Bit","Byte","Word","INT","DINT","REAL","LREAL"};
-    private static final String[] POSTTIME_SELECTIONS = {"500 ms","1 second","2 seconds","5 seconds","10 seconds"};
+    private static final String[] POSTTIME_SELECTIONS = {"100 ms","200 ms","500 ms","1 second","2 seconds","5 seconds","10 seconds"};
     private static final String DEFAULT_IP = "192.168.2.155";  //TODO: use preference page to change default
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -75,28 +81,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        LayoutInflater li = LayoutInflater.from(this);
-        final View alertDialogForPosttimeChosing = li.inflate(R.layout.alert_dialog_for_posttime_chosing,null);
-        AlertDialog.Builder AB = new AlertDialog.Builder(this);
-        listView_posttime = (ListView)alertDialogForPosttimeChosing.findViewById(R.id.listView_posttime);
-        listView_adapter = new ArrayAdapter(MainActivity.this,android.R.layout.simple_list_item_1,POSTTIME_SELECTIONS);
-        listView_posttime.setAdapter(listView_adapter); //TODO: CHECK IT OUT
-        AB.setView(alertDialogForPosttimeChosing);
-        AB.setTitle("Select refreshing period");
-        AB.setCancelable(true);
-        AB.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
 
-            }
-        });
-        AB.setPositiveButton("Continue", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                Toast.makeText(MainActivity.this,"Refreshing",Toast.LENGTH_SHORT).show();
-            }
-        });
-        final AlertDialog AD = AB.create();
 
 
 
@@ -105,6 +90,8 @@ public class MainActivity extends AppCompatActivity {
         IP = DEFAULT_IP;
 
         init();
+
+        createAlertDialog();
 
 
 
@@ -125,13 +112,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                ipPhone.setHost(IP);
-                ipPhone.setPort(502);
+                ipPhone.setHost((input_IP.length()!=0)?input_IP.toString():IP);
+                ipPhone.setPort((input_port.length()!=0)?Integer.parseInt(input_port.toString()):502);
 
                 refresh_on = !refresh_on;
 
                 mainHandler = new Handler();
-                //mainHandler.postDelayed(refresh,2000);  TODO: Finish this later
+                mainHandler.postDelayed(refresh,refreshDelay);  //TODO: Finish this later
 
                 Snackbar.make(view, (refresh_on)?"Refresh":"Stop", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
@@ -142,16 +129,60 @@ public class MainActivity extends AppCompatActivity {
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
-
-
-    /***   //TODO: Clear them all when finished
     private Runnable refresh = new Runnable() { //TODO: Correct the name right
         @Override
         public void run() {
+
             Thread thread = new Thread(multiThread);
             thread.start();
         }
     };
+
+    private Runnable multiThread = new Runnable() {
+        @Override
+        public void run() {
+            try{
+                modbusMaster = modbusFactory.createTcpMaster(ipPhone,true);
+                modbusMaster.setTimeout(500);
+                modbusMaster.setRetries(1);
+                modbusMaster.init();
+                ModbusRW modbusRW = new ModbusRW(modbusMaster);
+
+                final String result = modbusRW.mbReadINTtoInteger(0).toString();
+                Log.d("Value",result);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        textView_result.setText(result);
+                    }
+                });
+                modbusRW.mbWriteBoolArrayToByteWord(0,readToggleButtonStatus());
+            }catch (ModbusInitException e){
+                Log.e("ModbusInitException","Init Failed"+e.toString());
+            }catch (Exception e){
+                Log.e("ModbusRW Exception",e.toString());
+            }
+            Log.d("Refresh","Refreshing");
+            if(refresh_on)mainHandler.postDelayed(refresh,refreshDelay);
+        }
+    };
+
+    private Boolean[] readToggleButtonStatus(){
+        Boolean[] booleans = new Boolean[8];
+        int[] ID = {R.id.toggleButton_bit0,R.id.toggleButton_bit1,R.id.toggleButton_bit2,R.id.toggleButton_bit3,R.id.toggleButton_bit4,R.id.toggleButton_bit5,R.id.toggleButton_bit6,R.id.toggleButton_bit7};
+        for(int i = 0;i <8; i++){
+            ToggleButton bit = (ToggleButton)findViewById(ID[i]);
+            booleans[i] = bit.isChecked();
+        }
+        return booleans;
+    }
+
+
+
+
+
+    /***   //TODO: Clear them all when finished
+
 
     private Runnable multiThread = new Runnable() {
         @Override
@@ -222,6 +253,61 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    }
+
+    private void createAlertDialog(){
+        LayoutInflater li = LayoutInflater.from(this);
+        final View alertDialogForPosttimeChosing = li.inflate(R.layout.alert_dialog_for_posttime_chosing,null);
+        AlertDialog.Builder AB = new AlertDialog.Builder(this);
+        listView_posttime = (ListView)alertDialogForPosttimeChosing.findViewById(R.id.listView_posttime);
+        listView_adapter = new ArrayAdapter(MainActivity.this,android.R.layout.simple_list_item_1,POSTTIME_SELECTIONS);
+        listView_posttime.setAdapter(listView_adapter); //TODO: CHECK IT OUT
+        final AdapterView.OnItemClickListener listView_postTime_listener = new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                switch(position){
+                    case 0:
+                        refreshDelay = 50;
+                        break;
+                    case 1:
+                        refreshDelay = 100;
+                        break;
+                    case 2:
+                        refreshDelay = 250;
+                        break;
+                    case 3:
+                        refreshDelay = 500;
+                        break;
+                    case 4:
+                        refreshDelay = 1000;
+                        break;
+                    case 5:
+                        refreshDelay = 2500;
+                        break;
+                    case 6:
+                        refreshDelay = 5000;
+                        break;
+                }
+            }
+        };
+        listView_posttime.setOnItemClickListener(listView_postTime_listener);
+        AB.setView(alertDialogForPosttimeChosing);
+        AB.setTitle("Select refreshing period");
+        AB.setCancelable(true);
+        AB.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+        AB.setPositiveButton("Continue", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                Toast.makeText(MainActivity.this,"Refresh every "+refreshDelay*2 + " ms",Toast.LENGTH_SHORT).show();
+            }
+        });
+        AD = AB.create();
     }
 
     @Override

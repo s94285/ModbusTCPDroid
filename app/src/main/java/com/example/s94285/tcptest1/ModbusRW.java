@@ -133,7 +133,7 @@ public class ModbusRW{
             throw mbNotInitialized;
         } else {
             for(byte bytes = 0; bytes < booleans.length; bytes++)
-                modbusMaster.setValue(SLAVE_ID, RegisterRange.HOLDING_REGISTER,offset,bytes,booleans[bytes]);
+                modbusMaster.setValue(SLAVE_ID, RegisterRange.HOLDING_REGISTER,offset,bytes,(booleans[bytes])?true:false);
         }
     }
 
