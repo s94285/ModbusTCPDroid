@@ -89,20 +89,13 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
-
-
-
         //findViewById(R.id.content_main).requestFocus();
 
         IP = DEFAULT_IP;
 
         init();
-
+        checkWifiConnection();
         createAlertDialog();
-
-
-
 
         ipSlave = new IpParameters();
         ipSlave.setHost(IP);
@@ -122,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {//Stop refreshing
+                checkWifiConnection();
                 if(refresh_on){
                     refresh_on = false;
                     Snackbar.make(view, "Stopped", Snackbar.LENGTH_LONG)
@@ -312,10 +306,6 @@ public class MainActivity extends AppCompatActivity {
         button_connect.setOnClickListener(buttonCLickListener);
         button_disconnect.setOnClickListener(buttonCLickListener);
 
-
-
-
-
     }
 
     private void checkWifiConnection() {
@@ -371,14 +361,10 @@ public class MainActivity extends AppCompatActivity {
         AB.setPositiveButton("Continue", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-
                 Toast.makeText(MainActivity.this,"Refresh every "+refreshDelay + " ms",Toast.LENGTH_SHORT).show();
                 refresh_on = true;
-
                 fab.setImageResource(R.drawable.ic_media_stop);
-
-                //TODO Here
-
+                checkWifiConnection();
                 mainHandler = new Handler();
                 mainHandler.postDelayed(refresh,0);
             }
