@@ -1,9 +1,13 @@
 package com.example.s94285.tcptest1;
 
+import android.content.Context;
 import android.content.DialogInterface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.IdRes;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
@@ -39,6 +43,7 @@ import com.serotonin.modbus4j.ip.IpParameters;
 
 public class MainActivity extends AppCompatActivity {
     //XML field
+    private FloatingActionButton fab;
     private EditText input_IP, input_port,input_offset,input_bit, input_decimal;
     private Button button_connect,button_disconnect;
     private ToggleButton toggleButton_bit0,toggleButton_bit1,toggleButton_bit2,toggleButton_bit3;
@@ -48,14 +53,17 @@ public class MainActivity extends AppCompatActivity {
     private ListView listView_posttime;
     private ArrayAdapter spinnerAdapter_dataType,listView_adapter;
     private TextView textView_result;
+    private ConnectivityManager conMgr;
     //XML field
+
+    private Exception error;
 
     private ModbusMaster modbusMaster;
     private ModbusLocator myLocation;
-    private IpParameters ipPhone;
+    private IpParameters ipSlave;
     private ModbusFactory modbusFactory;
     private String IP;
-    static boolean isInitted = false;
+    static boolean mbInitRefresh = false;
     private Object modbusValues;
     private Object[] valuesInArray;
     Handler mainHandler;
@@ -63,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
     private ModbusRW mbrw;
 
     private AlertDialog AD;
-    private int refreshDelay;
+    private int refreshDelay = 500;
 
     private static final String[] DATA_TYPE_SELECTIONS = {"Bit","Byte","Word","INT","DINT","REAL","LREAL"};
     private static final String[] POSTTIME_SELECTIONS = {"100 ms","200 ms","500 ms","1 second","2 seconds","5 seconds","10 seconds"};
@@ -95,33 +103,37 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        ipPhone = new IpParameters();
+
+        ipSlave = new IpParameters();
+        ipSlave.setHost(IP);
+        ipSlave.setPort(502);
         modbusFactory = new ModbusFactory();
 
 
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
-            public boolean onLongClick(View v) { //TODO: Focusing **********************
+            public boolean onLongClick(View v) {
                 AD.show();
                 return false;
             }
         });
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-
-                ipPhone.setHost((input_IP.length()!=0)?input_IP.toString():IP);
-                ipPhone.setPort((input_port.length()!=0)?Integer.parseInt(input_port.toString()):502);
-
-                refresh_on = !refresh_on;
-
-                mainHandler = new Handler();
-                mainHandler.postDelayed(refresh,refreshDelay);  //TODO: Finish this later
-
-                Snackbar.make(view, (refresh_on)?"Refresh":"Stop", Snackbar.LENGTH_LONG)
+            public void onClick(View view) {//Stop refreshing
+                if(refresh_on){
+                    refresh_on = false;
+                    Snackbar.make(view, "Stopped", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
+                    fab.setImageResource(R.drawable.ic_media_play);
+                }else{
+                    Snackbar.make(view, "Refresh", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                    Thread thread = new Thread(multiThread);
+                    thread.start();
+                }
+
             }
         });
         // ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -141,11 +153,19 @@ public class MainActivity extends AppCompatActivity {
     private Runnable multiThread = new Runnable() {
         @Override
         public void run() {
+            if(modbusMaster == null)modbusMaster = modbusFactory.createTcpMaster(ipSlave,true);
+            if(!modbusMaster.isInitialized()){
+                try{
+                    modbusMaster.setTimeout(500);
+                    modbusMaster.setRetries(1);
+                    modbusMaster.init();
+                }catch (ModbusInitException e){
+                    e.printStackTrace();
+                    error = e;
+                }
+                mbInitRefresh = false;
+            }
             try{
-                modbusMaster = modbusFactory.createTcpMaster(ipPhone,true);
-                modbusMaster.setTimeout(500);
-                modbusMaster.setRetries(1);
-                modbusMaster.init();
                 ModbusRW modbusRW = new ModbusRW(modbusMaster);
 
                 final String result = modbusRW.mbReadINTtoInteger(0).toString();
@@ -176,10 +196,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return booleans;
     }
-
-
-
-
 
     /***   //TODO: Clear them all when finished
 
@@ -250,9 +266,61 @@ public class MainActivity extends AppCompatActivity {
         spinnerAdapter_dataType = new ArrayAdapter(MainActivity.this,android.R.layout.select_dialog_item,DATA_TYPE_SELECTIONS);
         spinner_dataType.setAdapter(spinnerAdapter_dataType);
 
+        conMgr = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        final View.OnClickListener buttonCLickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switch (v.getId()){
+                    case R.id.button_connect:
+                        checkWifiConnection();
+                        if(modbusMaster != null)modbusMaster.destroy();
+                        Thread init = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try{
+                                    ipSlave.setHost((input_IP.length()!=0)?input_IP.toString():IP);
+                                    ipSlave.setPort((input_port.length()!=0)?Integer.parseInt(input_port.toString()):502);
+                                    modbusMaster = modbusFactory.createTcpMaster(ipSlave,true);
+                                    modbusMaster.setTimeout(500);
+                                    modbusMaster.setRetries(1);
+                                    modbusMaster.init();
+                                }catch (ModbusInitException | NumberFormatException e){
+                                    e.printStackTrace();
+                                    error = e;
+
+                                }
+                            }
+                        });
+                        if(error != null)Toast.makeText(MainActivity.this,error.toString(),Toast.LENGTH_SHORT);
+                        init.start();
+                        if(modbusMaster != null) {
+                            Toast.makeText(MainActivity.this, (modbusMaster.isInitialized()) ? "Connection Succeeded" : ("Connection Failed"), Toast.LENGTH_SHORT).show();
+                        }else {
+                            Toast.makeText(MainActivity.this,"Cannot Create ModbusMaster",Toast.LENGTH_SHORT).show();
+                        }
+                        break;
+                    case R.id.button_disconnect:
+                        if(modbusMaster != null)
+                            if(modbusMaster.isInitialized())
+                                modbusMaster.destroy();
+                        break;
+                }
+            }
+        };
+
+        button_connect.setOnClickListener(buttonCLickListener);
+        button_disconnect.setOnClickListener(buttonCLickListener);
 
 
 
+
+
+    }
+
+    private void checkWifiConnection() {
+        if(!conMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected())
+            Toast.makeText(MainActivity.this,"No WiFi Connection",Toast.LENGTH_LONG).show();
     }
 
     private void createAlertDialog(){
@@ -267,25 +335,25 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 switch(position){
                     case 0:
-                        refreshDelay = 50;
-                        break;
-                    case 1:
                         refreshDelay = 100;
                         break;
-                    case 2:
-                        refreshDelay = 250;
+                    case 1:
+                        refreshDelay = 200;
                         break;
-                    case 3:
+                    case 2:
                         refreshDelay = 500;
                         break;
-                    case 4:
+                    case 3:
                         refreshDelay = 1000;
                         break;
+                    case 4:
+                        refreshDelay = 2000;
+                        break;
                     case 5:
-                        refreshDelay = 2500;
+                        refreshDelay = 5000;
                         break;
                     case 6:
-                        refreshDelay = 5000;
+                        refreshDelay = 10000;
                         break;
                 }
             }
@@ -304,7 +372,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
-                Toast.makeText(MainActivity.this,"Refresh every "+refreshDelay*2 + " ms",Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this,"Refresh every "+refreshDelay + " ms",Toast.LENGTH_SHORT).show();
+                refresh_on = true;
+
+                fab.setImageResource(R.drawable.ic_media_stop);
+
+                //TODO Here
+
+                mainHandler = new Handler();
+                mainHandler.postDelayed(refresh,0);
             }
         });
         AD = AB.create();
