@@ -2,6 +2,8 @@ package com.example.s94285.tcptest1;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -105,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setRippleColor(0xffff8800);
         fab.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -121,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
                     Snackbar.make(view, "Stopped", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
                     fab.setImageResource(R.drawable.ic_media_play);
+                    fab.setBackgroundTintList(ColorStateList.valueOf(0xff99cc00));
                 }else{
                     Snackbar.make(view, "Refresh", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
@@ -364,6 +368,7 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this,"Refresh every "+refreshDelay + " ms",Toast.LENGTH_SHORT).show();
                 refresh_on = true;
                 fab.setImageResource(R.drawable.ic_media_stop);
+                fab.setBackgroundTintList(ColorStateList.valueOf(0xffff8800));
                 checkWifiConnection();
                 mainHandler = new Handler();
                 mainHandler.postDelayed(refresh,0);

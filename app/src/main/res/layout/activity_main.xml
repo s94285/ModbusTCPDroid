@@ -28,7 +28,7 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
         app:srcCompat="@drawable/ic_media_play"
-        app:backgroundTint="@android:color/holo_blue_light" />
+        app:backgroundTint="@android:color/holo_green_light" />
 
     <include layout="@layout/content_main" />
 
