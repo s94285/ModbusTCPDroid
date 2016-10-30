@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setRippleColor(0xffff8800);
+        fab.setRippleColor(0xffff8800);    //Orange
         fab.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -181,6 +181,16 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("ModbusRW Exception",e.toString());
             }
             Log.d("Refresh","Refreshing");
+            runOnUiThread(new Runnable() {    //Change the fab color every refresh period
+                @Override
+                public void run() {
+                    if(fab.getBackgroundTintList() == ColorStateList.valueOf(0xffff8800)){    //Orange
+                        fab.setBackgroundTintList(ColorStateList.valueOf(0xffff4444));    //Red
+                    }else if(fab.getBackgroundTintList() == ColorStateList.valueOf(0xffff4444)){    //Red
+                        fab.setBackgroundTintList(ColorStateList.valueOf(0xffff8800));    //Orange
+                    }
+                }
+            });
             if(refresh_on)mainHandler.postDelayed(refresh,refreshDelay);
         }
     };
