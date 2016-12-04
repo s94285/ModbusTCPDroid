@@ -65,7 +65,6 @@ public class MainActivity extends AppCompatActivity {
     private IpParameters ipSlave;
     private ModbusFactory modbusFactory;
     private String IP;
-    static boolean mbInitRefresh = false;
     private Object modbusValues;
     private Object[] valuesInArray;
     Handler mainHandler;
@@ -74,10 +73,12 @@ public class MainActivity extends AppCompatActivity {
 
     private AlertDialog AD;
     private int refreshDelay = 500;
+    private int selectedDataType = 0;
 
     private static final String[] DATA_TYPE_SELECTIONS = {"Bit","Byte","Word","INT","DINT","REAL","LREAL"};
     private static final String[] POSTTIME_SELECTIONS = {"100 ms","200 ms","500 ms","1 second","2 seconds","5 seconds","10 seconds"};
     private static final String DEFAULT_IP = "192.168.2.155";  //TODO: use preference page to change default
+
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -139,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
-    private Runnable refresh = new Runnable() { //TODO: Correct the name right
+    private Runnable refresh = new Runnable() {
         @Override
         public void run() {
 
@@ -151,8 +152,8 @@ public class MainActivity extends AppCompatActivity {
     private Runnable multiThread = new Runnable() {
         @Override
         public void run() {
-            if(modbusMaster == null)modbusMaster = modbusFactory.createTcpMaster(ipSlave,true);
-            if(!modbusMaster.isInitialized()){
+            if(modbusMaster == null)modbusMaster = modbusFactory.createTcpMaster(ipSlave,true);     //Check if modbusMaster is null
+            if(!modbusMaster.isInitialized()){      //Initialize if didn't
                 try{
                     modbusMaster.setTimeout(500);
                     modbusMaster.setRetries(1);
@@ -161,11 +162,38 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                     error = e;
                 }
-                mbInitRefresh = false;
             }
-            try{
-                ModbusRW modbusRW = new ModbusRW(modbusMaster);
+            ModbusRW modbusRW = new ModbusRW(modbusMaster);     //Create my custom class for Read Write
+            if(radioButton_writeMB.isChecked())     //for Writing modbus if radioButton is selected
+                try{
+                    Log.d("Spinner on","WriteMB");
+                    switch (DATA_TYPE_SELECTIONS[selectedDataType]){        //TODO: Working On
+                        case "Bit" :
+                            Log.d("Spinner on","First: Bit");
+                            int value = (input_decimal.length() != 0)?Integer.parseInt(input_decimal.getText().toString()):-1;
+                            modbusRW.mbWriteBooleanToBit((input_offset.length() != 0)?Integer.parseInt(input_offset.getText().toString()):0,
+                                    (input_bit.length()!=0)?Integer.parseInt(input_bit.getText().toString()):0,
+                                    (value == 0 || value == 1)?(value == 1):readToggleButtonStatus()[0]);
+                            break;
+                        case "Byte" :
+                            Log.d("Spinner on","Byte");
+                            modbusRW.mbWriteIntToINT((input_offset.length() != 0)?Integer.parseInt(input_offset.getText().toString()):0,
+                                    (input_decimal.length() != 0)?Short.parseShort(input_decimal.getText().toString()):valueOfBoolArray(readToggleButtonStatus()).shortValue());
+                            break;
 
+                        default:
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(MainActivity.this,"Still Working On "+DATA_TYPE_SELECTIONS[selectedDataType],Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            Log.d("Spinner on",DATA_TYPE_SELECTIONS[selectedDataType]);
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            try{        //for Reading modbus in all circumstances
                 final String result = modbusRW.mbReadINTtoInteger(0).toString();
                 Log.d("Value",result);
                 runOnUiThread(new Runnable() {
@@ -174,9 +202,9 @@ public class MainActivity extends AppCompatActivity {
                         textView_result.setText(result);
                     }
                 });
-                modbusRW.mbWriteBoolArrayToByteWord(0,readToggleButtonStatus());
-            }catch (ModbusInitException e){
-                Log.e("ModbusInitException","Init Failed"+e.toString());
+                //modbusRW.mbWriteBoolArrayToByteWord(0,readToggleButtonStatus());
+
+                Log.d("Toggle",String.valueOf(valueOfBoolArray(readToggleButtonStatus())));
             }catch (Exception e){
                 Log.e("ModbusRW Exception",e.toString());
             }
@@ -191,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
-            if(refresh_on)mainHandler.postDelayed(refresh,refreshDelay);
+            if(refresh_on)mainHandler.postDelayed(refresh,refreshDelay);        //Return to refresh and do it again if refresh_on
         }
     };
 
@@ -203,6 +231,20 @@ public class MainActivity extends AppCompatActivity {
             booleans[i] = bit.isChecked();
         }
         return booleans;
+    }
+
+    private Integer valueOfBoolArray(Boolean[] array){
+        int total = 0;
+        for(int i = 0;i < array.length; i++){
+            int mul = 1;
+            int x = 0;
+            while(x < i){
+                mul *= 2;
+                x++;
+            }
+            total += ((array[i])?1:0)*mul;
+        }
+        return total;
     }
 
     /***   //TODO: Clear them all when finished
@@ -273,6 +315,24 @@ public class MainActivity extends AppCompatActivity {
 
         spinnerAdapter_dataType = new ArrayAdapter(MainActivity.this,android.R.layout.select_dialog_item,DATA_TYPE_SELECTIONS);
         spinner_dataType.setAdapter(spinnerAdapter_dataType);
+        spinner_dataType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedDataType = position;
+                toggleButton_bit1.setVisibility((position == 0)?View.INVISIBLE:View.VISIBLE);
+                toggleButton_bit2.setVisibility((position == 0)?View.INVISIBLE:View.VISIBLE);
+                toggleButton_bit3.setVisibility((position == 0)?View.INVISIBLE:View.VISIBLE);
+                toggleButton_bit4.setVisibility((position == 0)?View.INVISIBLE:View.VISIBLE);
+                toggleButton_bit5.setVisibility((position == 0)?View.INVISIBLE:View.VISIBLE);
+                toggleButton_bit6.setVisibility((position == 0)?View.INVISIBLE:View.VISIBLE);
+                toggleButton_bit7.setVisibility((position == 0)?View.INVISIBLE:View.VISIBLE);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
 
         conMgr = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
 
@@ -333,7 +393,7 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog.Builder AB = new AlertDialog.Builder(this);
         listView_posttime = (ListView)alertDialogForPosttimeChosing.findViewById(R.id.listView_posttime);
         listView_adapter = new ArrayAdapter(MainActivity.this,android.R.layout.simple_list_item_1,POSTTIME_SELECTIONS);
-        listView_posttime.setAdapter(listView_adapter); //TODO: CHECK IT OUT
+        listView_posttime.setAdapter(listView_adapter);
         final AdapterView.OnItemClickListener listView_postTime_listener = new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -445,5 +505,5 @@ public class MainActivity extends AppCompatActivity {
         client.disconnect();
     }
 
-    
+
 }
