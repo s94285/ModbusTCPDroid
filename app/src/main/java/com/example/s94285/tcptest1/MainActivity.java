@@ -498,6 +498,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onStop() {
         super.onStop();
+        if(refresh_on) {
+            refresh_on = false;
+            fab.setImageResource(R.drawable.ic_media_play);
+            fab.setBackgroundTintList(ColorStateList.valueOf(0xff99cc00));
+        }
 
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -505,5 +510,9 @@ public class MainActivity extends AppCompatActivity {
         client.disconnect();
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
 
+    }
 }
