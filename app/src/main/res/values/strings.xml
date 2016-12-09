@@ -1,4 +1,24 @@
 <resources>
     <string name="app_name">TcpTest1</string>
     <string name="action_settings">Settings</string>
-</resources>
+    <string name="action_reference">Reference</string>
+    <string name="action_about">About</string>
+    <string name="action_exit">Exit</string>
+    <string name="alertDialog_cancel">Cancel</string>
+    <string name="alertDialog_confirm">Confirm</string>
+    <string name="alertDialog_Facebook">Facebook</string>
+    <string name="alertDialog_reference_content"> BYTE	0	255	8 bit\n
+ WORD	0	65,535	16 bit\n
+ DWORD	0	4,294,967,295	32 bit\n
+ LWORD	0	2^64-1	64 bit\n
+ SINT	–128	127	8 bit\n
+ USINT	0	255	8 bit\n
+ INT	–32,768	32,767	16 bit\n
+ UINT	0	65,535	16 bit\n
+ DINT	–2,147,483,648	2,147,483,647	32 bit\n
+ UDINT	0	4,294,967,295	32 bit\n
+ LINT	–263	263-1	64 bit\n
+ ULINT	0	2^64-1	64 bit\n
+ REAL 1.401e-45...3.403e+38 32bit\n
+ LREAL 2.2250738585072014e-308...7976931348623158e+308    64bit</string>
+    </resources>

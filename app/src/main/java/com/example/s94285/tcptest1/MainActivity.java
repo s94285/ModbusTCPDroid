@@ -2,6 +2,7 @@ package com.example.s94285.tcptest1;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.net.ConnectivityManager;
 import android.net.Uri;
@@ -517,8 +518,37 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch(id){
+            case R.id.action_about:
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle(R.string.action_about)
+                        .setCancelable(false)
+                        .setMessage("Made By 中工三電乙 林宏哲")
+                        .setPositiveButton(R.string.alertDialog_confirm, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                            }
+                        })
+                        .setNeutralButton(R.string.alertDialog_Facebook, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("http://fb.com/s94285")));
+                            }
+                        })
+                        .show();
+                break;
+            case R.id.action_reference:
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle(R.string.action_reference)
+                        .setMessage(R.string.alertDialog_reference_content)
+                        .setCancelable(true)
+                        .show();
+                break;
+            case R.id.action_exit:
+                Toast.makeText(MainActivity.this,"See You!",Toast.LENGTH_SHORT).show();
+                finish();
+                break;
         }
 
         return super.onOptionsItemSelected(item);
