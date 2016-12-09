@@ -3,13 +3,10 @@ package com.example.s94285.tcptest1;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.IdRes;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
@@ -24,11 +21,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -164,21 +159,83 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             ModbusRW modbusRW = new ModbusRW(modbusMaster);     //Create my custom class for Read Write
+            final int offset = (input_offset.length() != 0)?Integer.parseInt(input_offset.getText().toString()):0;
+            final int bit = (input_bit.length()!=0)?Integer.parseInt(input_bit.getText().toString()):0;
+            final boolean isInput = input_decimal.length() != 0;
+            final String string_value = (isInput)?input_decimal.getText().toString():"";
             if(radioButton_writeMB.isChecked())     //for Writing modbus if radioButton is selected
                 try{
                     Log.d("Spinner on","WriteMB");
                     switch (DATA_TYPE_SELECTIONS[selectedDataType]){        //TODO: Working On
                         case "Bit" :
                             Log.d("Spinner on","First: Bit");
-                            int value = (input_decimal.length() != 0)?Integer.parseInt(input_decimal.getText().toString()):-1;
-                            modbusRW.mbWriteBooleanToBit((input_offset.length() != 0)?Integer.parseInt(input_offset.getText().toString()):0,
-                                    (input_bit.length()!=0)?Integer.parseInt(input_bit.getText().toString()):0,
-                                    (value == 0 || value == 1)?(value == 1):readToggleButtonStatus()[0]);
+                            int value = (isInput)?Integer.parseInt(string_value):-1;
+                            modbusRW.mbWriteBooleanToBit(offset,bit,(value == 0 || value == 1)?(value == 1):readToggleButtonStatus()[0]);
                             break;
                         case "Byte" :
                             Log.d("Spinner on","Byte");
-                            modbusRW.mbWriteIntToINT((input_offset.length() != 0)?Integer.parseInt(input_offset.getText().toString()):0,
-                                    (input_decimal.length() != 0)?Short.parseShort(input_decimal.getText().toString()):valueOfBoolArray(readToggleButtonStatus()).shortValue());
+                            modbusRW.mbWriteShortToINT(offset,
+                                    (isInput)?Short.parseShort(string_value):valueOfBoolArray(readToggleButtonStatus()).shortValue());
+                            break;
+                        case "Word":
+                            if(isInput){
+                                modbusRW.mbWriteShortToINT(offset,Short.parseShort(string_value));
+                            }else{
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(MainActivity.this,"Please Enter Value!!",Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                            }
+                            break;
+                        case "INT":
+                            if(isInput){
+                            modbusRW.mbWriteShortToINT(offset,Short.parseShort(string_value));
+                        }else{
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(MainActivity.this,"Please Enter Value!!",Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+                            break;
+                        case "DINT":
+                            if(isInput){
+                                modbusRW.mbWriteIntToDINT(offset,Integer.parseInt(string_value));
+                            }else{
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(MainActivity.this,"Please Enter Value!!",Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                            }
+                            break;
+                        case "REAL":
+                            if(isInput){
+                                modbusRW.mbWriteFloatToReal(offset,Float.parseFloat(string_value));
+                            }else{
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(MainActivity.this,"Please Enter Value!!",Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                            }
+                            break;
+                        case "LREAL":
+                            if(isInput){
+                                modbusRW.mbWriteDoubleToLREAL(offset,Double.parseDouble(string_value));
+                            }else{
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(MainActivity.this,"Please Enter Value!!",Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                            }
                             break;
 
                         default:
@@ -194,12 +251,51 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             try{        //for Reading modbus in all circumstances
-                final String result = modbusRW.mbReadINTtoInteger(0).toString();
-                Log.d("Value",result);
+                String result = "";
+                switch(DATA_TYPE_SELECTIONS[selectedDataType]){
+                    case "Bit" :
+                        result = (modbusRW.mbReadByteToBoolean((input_offset.length()!=0)?Integer.parseInt(input_offset.getText().toString()):0)
+                                [(input_bit.length()!=0)?Integer.parseInt(input_bit.getText().toString()):0])?"True":"False";
+                        final String bool = result;
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                toggleButton_bit0.setChecked(Boolean.parseBoolean(bool));
+                            }
+                        });
+                        break;
+                    case "Byte" :
+                        final Boolean[] boolArray= modbusRW.mbReadByteToBoolean(offset);
+                        result = String.valueOf(valueOfBoolArray(boolArray));
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                changeToggleButtonStatus(boolArray);
+                            }
+                        });
+                        break;
+                    case "Word":
+                        result = modbusRW.mbReadINTToInteger(offset).toString();
+                        break;
+                    case "INT":
+                        result = modbusRW.mbReadINTToInteger(offset).toString();
+                        break;
+                    case "DINT":
+                        result = modbusRW.mbReadDINTToInteger(offset).toString();
+                        break;
+                    case "REAL":
+                        result = modbusRW.mbReadREALToFloat(offset).toString();
+                        break;
+                    case "LREAL":
+                        result = modbusRW.mbReadLREALToDouble(offset).toString();
+                        break;
+                }
+                final String str = result;
+                Log.d("Value",str);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        textView_result.setText(result);
+                        textView_result.setText(str);
                     }
                 });
                 //modbusRW.mbWriteBoolArrayToByteWord(0,readToggleButtonStatus());
@@ -227,10 +323,18 @@ public class MainActivity extends AppCompatActivity {
         Boolean[] booleans = new Boolean[8];
         int[] ID = {R.id.toggleButton_bit0,R.id.toggleButton_bit1,R.id.toggleButton_bit2,R.id.toggleButton_bit3,R.id.toggleButton_bit4,R.id.toggleButton_bit5,R.id.toggleButton_bit6,R.id.toggleButton_bit7};
         for(int i = 0;i <8; i++){
-            ToggleButton bit = (ToggleButton)findViewById(ID[i]);
-            booleans[i] = bit.isChecked();
+            ToggleButton button = (ToggleButton)findViewById(ID[i]);
+            booleans[i] = button.isChecked();
         }
         return booleans;
+    }
+
+    private void changeToggleButtonStatus(Boolean[] array){
+        int[] ID = {R.id.toggleButton_bit0,R.id.toggleButton_bit1,R.id.toggleButton_bit2,R.id.toggleButton_bit3,R.id.toggleButton_bit4,R.id.toggleButton_bit5,R.id.toggleButton_bit6,R.id.toggleButton_bit7};
+        for(int i = 0;i <8; i++){
+            ToggleButton button = (ToggleButton)findViewById(ID[i]);
+            button.setChecked(array[i]);
+        }
     }
 
     private Integer valueOfBoolArray(Boolean[] array){
@@ -372,6 +476,7 @@ public class MainActivity extends AppCompatActivity {
                         if(modbusMaster != null)
                             if(modbusMaster.isInitialized())
                                 modbusMaster.destroy();
+                        Toast.makeText(MainActivity.this,"Disconnect",Toast.LENGTH_SHORT).show();
                         break;
                 }
             }
@@ -503,7 +608,7 @@ public class MainActivity extends AppCompatActivity {
             fab.setImageResource(R.drawable.ic_media_play);
             fab.setBackgroundTintList(ColorStateList.valueOf(0xff99cc00));
         }
-
+        Log.d("Activity","Stopped");
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         AppIndex.AppIndexApi.end(client, getIndexApiAction());

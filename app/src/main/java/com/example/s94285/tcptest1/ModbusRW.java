@@ -41,9 +41,9 @@ public class ModbusRW{
 
     /**Reading Values***************************************************************************/
 
-    public boolean[] mbReadBytetoBolean(int offset) throws Exception{
+    public Boolean[] mbReadByteToBoolean(int offset) throws Exception{
         int range = RegisterRange.HOLDING_REGISTER;
-        boolean[] mb = new boolean[8];
+        Boolean[] mb = new Boolean[8];
         if(!modbusMaster.isInitialized()){
             throw mbNotInitialized;
         }else{
@@ -54,9 +54,9 @@ public class ModbusRW{
         return mb;
     }
 
-    public boolean[] mbReadWordtoBolean(int offset) throws Exception{
+    public Boolean[] mbReadWordToBolean(int offset) throws Exception{
         int range = RegisterRange.HOLDING_REGISTER;
-        boolean[] mb = new boolean[16];
+        Boolean[] mb = new Boolean[16];
         if(!modbusMaster.isInitialized()){
             throw mbNotInitialized;
         }else{
@@ -71,7 +71,7 @@ public class ModbusRW{
     }
 
     /** coz java's int is in 4 bytes, so I did this to fit PLC's INT (2 bytes)*/
-    public Integer mbReadINTtoInteger(int offset) throws Exception{
+    public Integer mbReadINTToInteger(int offset) throws Exception{
         int range = RegisterRange.HOLDING_REGISTER;
         Short mb = 0;
         if(!modbusMaster.isInitialized()){
@@ -82,7 +82,7 @@ public class ModbusRW{
         return Integer.parseInt(mb.toString());
     }
 
-    public Integer mbReadDINTtoInteger(int offset) throws Exception {
+    public Integer mbReadDINTToInteger(int offset) throws Exception {
         int range = RegisterRange.HOLDING_REGISTER;
         int mb = 0;
         if (!modbusMaster.isInitialized()) {
@@ -93,7 +93,7 @@ public class ModbusRW{
         return mb;
     }
 
-    public Float mbReadREALtoFloat(int offset) throws Exception{
+    public Float mbReadREALToFloat(int offset) throws Exception{
         int range = RegisterRange.HOLDING_REGISTER;
         float mb = 0;
         if (!modbusMaster.isInitialized()) {
@@ -104,7 +104,7 @@ public class ModbusRW{
         return mb;
     }
 
-    public Double mbReadLREALtoDouble(int offset) throws Exception{
+    public Double mbReadLREALToDouble(int offset) throws Exception{
         int range = RegisterRange.HOLDING_REGISTER;
         double mb = 0;
         if (!modbusMaster.isInitialized()) {
@@ -133,39 +133,39 @@ public class ModbusRW{
             throw mbNotInitialized;
         } else {
             for(byte bytes = 0; bytes < booleans.length; bytes++)
-                modbusMaster.setValue(SLAVE_ID, RegisterRange.HOLDING_REGISTER,offset,bytes,(booleans[bytes])?true:false);
+                modbusMaster.setValue(SLAVE_ID, RegisterRange.HOLDING_REGISTER,offset,bytes,(booleans[bytes]));
         }
     }
 
-    public void mbWriteIntToINT(int offset, short INT) throws Exception{
+    public void mbWriteShortToINT(int offset, short input) throws Exception{
         if (!modbusMaster.isInitialized()){
             throw mbNotInitialized;
         } else {
-            modbusMaster.setValue(SLAVE_ID, RegisterRange.HOLDING_REGISTER,offset,DataType.TWO_BYTE_INT_SIGNED,INT);
+            modbusMaster.setValue(SLAVE_ID, RegisterRange.HOLDING_REGISTER,offset,DataType.TWO_BYTE_INT_SIGNED,input);
         }
     }
 
-    public void mbWriteIntToDINT(int offset, int bool) throws Exception{
+    public void mbWriteIntToDINT(int offset, int input) throws Exception{
         if (!modbusMaster.isInitialized()){
             throw mbNotInitialized;
         } else {
-            modbusMaster.setValue(SLAVE_ID, RegisterRange.HOLDING_REGISTER,offset,DataType.FOUR_BYTE_INT_SIGNED);
+            modbusMaster.setValue(SLAVE_ID, RegisterRange.HOLDING_REGISTER,offset,DataType.FOUR_BYTE_INT_SIGNED,input);
         }
     }
 
-    public void mbWriteFloatToReal(int offset, float bool) throws Exception{
+    public void mbWriteFloatToReal(int offset, float input) throws Exception{
         if (!modbusMaster.isInitialized()){
             throw mbNotInitialized;
         } else {
-            modbusMaster.setValue(SLAVE_ID, RegisterRange.HOLDING_REGISTER,offset,DataType.FOUR_BYTE_FLOAT);
+            modbusMaster.setValue(SLAVE_ID, RegisterRange.HOLDING_REGISTER,offset,DataType.FOUR_BYTE_FLOAT,input);
         }
     }
 
-    public void mbWriteDoubleToLREAL(int offset, float bool) throws Exception{
+    public void mbWriteDoubleToLREAL(int offset, double input) throws Exception{
         if (!modbusMaster.isInitialized()){
             throw mbNotInitialized;
         } else {
-            modbusMaster.setValue(SLAVE_ID, RegisterRange.HOLDING_REGISTER,offset,DataType.EIGHT_BYTE_FLOAT);
+            modbusMaster.setValue(SLAVE_ID, RegisterRange.HOLDING_REGISTER,offset,DataType.EIGHT_BYTE_FLOAT,input);
         }
     }
 
