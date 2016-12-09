@@ -33,7 +33,6 @@ import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.serotonin.modbus4j.ModbusFactory;
-import com.serotonin.modbus4j.ModbusLocator;
 import com.serotonin.modbus4j.ModbusMaster;
 import com.serotonin.modbus4j.exception.ModbusInitException;
 import com.serotonin.modbus4j.ip.IpParameters;
@@ -56,15 +55,11 @@ public class MainActivity extends AppCompatActivity {
     private Exception error;
 
     private ModbusMaster modbusMaster;
-    private ModbusLocator myLocation;
     private IpParameters ipSlave;
     private ModbusFactory modbusFactory;
     private String IP;
-    private Object modbusValues;
-    private Object[] valuesInArray;
     Handler mainHandler;
     private boolean refresh_on = false;
-    private ModbusRW mbrw;
 
     private AlertDialog AD;
     private int refreshDelay = 500;
@@ -350,51 +345,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return total;
     }
-
-    /***   //TODO: Clear them all when finished
-
-
-    private Runnable multiThread = new Runnable() {
-        @Override
-        public void run() {
-            modbusValues = null;
-            try {
-                modbusMaster = modbusFactory.createTcpMaster(ipPhone, true);
-                modbusMaster.setTimeout(500);
-                modbusMaster.setRetries(1);
-                modbusMaster.init();
-            }catch (ModbusInitException e){
-                Log.d("initE",e.toString());
-            }
-            if(modbusMaster.isInitialized()){
-                Log.d("isInit","Success");
-                byte byteRead = 7;
-                mbrw = new ModbusRW(modbusMaster);
-                try {
-                    //List <Integer> result = modbusMaster.scanForSlaveNodes();
-                    //Log.d("ReadNode", result.toString());
-                    ModbusLocator modbusLocator = new ModbusLocator(1,RegisterRange.HOLDING_REGISTER,0,byteRead);
-                    modbusValues = modbusMaster.getValue(modbusLocator);
-                    //modbusMaster.getValue(1,RegisterRange.HOLDING_REGISTER,4001,byteRead);
-                    Log.d("ReadBit", modbusValues.toString());
-                    Log.d("ReadWord",new ModbusRW(modbusMaster).mbReadINTtoInteger(0).toString());
-                    if(modbusValues.toString().equals("true")){modbusMaster.setValue(modbusLocator,false);Log.d("TF","true");}
-                    if(modbusValues.toString().equals("false")){modbusMaster.setValue(modbusLocator,true);Log.d("TF","false");}
-                }catch(ModbusTransportException e1){
-                    Log.d("ModTransportE", e1.toString());
-                }catch(ErrorResponseException e2){
-                    Log.d("ErrResponseE", e2.toString());
-                }catch(Exception e){
-                    Log.d("Exception",e.toString());
-                }
-            }else{
-                Log.d("isInit","Failed");
-            }
-            if(refresh_on)mainHandler.postDelayed(refresh,2000);
-        }
-
-    };
-     */
 
     private void init(){     //TODO: DO THIS FIRST
         input_IP = (EditText)findViewById(R.id.input_IP);
