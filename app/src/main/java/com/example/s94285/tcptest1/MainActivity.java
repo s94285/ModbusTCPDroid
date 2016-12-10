@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ColorStateList;
+import android.icu.util.TimeUnit;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -103,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
+                if(!refresh_on)
                 AD.show();
                 return false;
             }
@@ -155,18 +157,18 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             ModbusRW modbusRW = new ModbusRW(modbusMaster);     //Create my custom class for Read Write
-            final int offset = (input_offset.length() != 0)?Integer.parseInt(input_offset.getText().toString()):0;
-            final int bit = (input_bit.length()!=0)?Integer.parseInt(input_bit.getText().toString()):0;
-            final boolean isInput = input_decimal.length() != 0;
-            final String string_value = (isInput)?input_decimal.getText().toString():"";
+            int offset = (input_offset.length() != 0)?Integer.parseInt(input_offset.getText().toString()):0;
+            int bit = (input_bit.length()!=0)?Integer.parseInt(input_bit.getText().toString()):0;
+            boolean isInput = input_decimal.length() != 0;
+            String string_value = (isInput)?input_decimal.getText().toString():"";
             if(radioButton_writeMB.isChecked())     //for Writing modbus if radioButton is selected
                 try{
                     Log.d("Spinner on","WriteMB");
                     switch (DATA_TYPE_SELECTIONS[selectedDataType]){        //TODO: Working On
                         case "Bit" :
                             Log.d("Spinner on","First: Bit");
-                            int value = (isInput)?Integer.parseInt(string_value):-1;
-                            modbusRW.mbWriteBooleanToBit(offset,bit,(value == 0 || value == 1)?(value == 1):readToggleButtonStatus()[0]);
+                            boolean value = (isInput)?string_value.equals("1") || string_value.equals("True") || string_value.equals("true"):readToggleButtonStatus()[0];
+                            modbusRW.mbWriteBooleanToBit(offset,bit,value);
                             break;
                         case "Byte" :
                             Log.d("Spinner on","Byte");
@@ -233,15 +235,6 @@ public class MainActivity extends AppCompatActivity {
                                 });
                             }
                             break;
-
-                        default:
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Toast.makeText(MainActivity.this,"Still Working On "+DATA_TYPE_SELECTIONS[selectedDataType],Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                            Log.d("Spinner on",DATA_TYPE_SELECTIONS[selectedDataType]);
                     }
                 }catch (Exception e){
                     e.printStackTrace();
@@ -252,23 +245,27 @@ public class MainActivity extends AppCompatActivity {
                     case "Bit" :
                         result = (modbusRW.mbReadByteToBoolean((input_offset.length()!=0)?Integer.parseInt(input_offset.getText().toString()):0)
                                 [(input_bit.length()!=0)?Integer.parseInt(input_bit.getText().toString()):0])?"True":"False";
-                        final String bool = result;
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                toggleButton_bit0.setChecked(Boolean.parseBoolean(bool));
-                            }
-                        });
+                        if(radioButton_readMB.isChecked()){
+                            final String bool = result;
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    toggleButton_bit0.setChecked(Boolean.parseBoolean(bool));
+                                }
+                            });
+                        }
                         break;
                     case "Byte" :
                         final Boolean[] boolArray= modbusRW.mbReadByteToBoolean(offset);
                         result = String.valueOf(valueOfBoolArray(boolArray));
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                changeToggleButtonStatus(boolArray);
-                            }
-                        });
+                        if(radioButton_readMB.isChecked()){
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    changeToggleButtonStatus(boolArray);
+                                }
+                            });
+                        }
                         break;
                     case "Word":
                         result = modbusRW.mbReadINTToInteger(offset).toString();
@@ -402,8 +399,8 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void run() {
                                 try{
-                                    ipSlave.setHost((input_IP.length()!=0)?input_IP.toString():IP);
-                                    ipSlave.setPort((input_port.length()!=0)?Integer.parseInt(input_port.toString()):502);
+                                    ipSlave.setHost((input_IP.length()!=0)?input_IP.getText().toString():IP);
+                                    ipSlave.setPort((input_port.length()!=0)?Integer.parseInt(input_port.getText().toString()):502);
                                     modbusMaster = modbusFactory.createTcpMaster(ipSlave,true);
                                     modbusMaster.setTimeout(500);
                                     modbusMaster.setRetries(1);
