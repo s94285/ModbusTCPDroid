@@ -3,8 +3,9 @@ package com.example.s94285.tcptest1;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
-import android.icu.util.TimeUnit;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -41,17 +42,17 @@ import com.serotonin.modbus4j.ip.IpParameters;
 
 public class MainActivity extends AppCompatActivity {
     //XML field
-    private FloatingActionButton fab;
-    private EditText input_IP, input_port,input_offset,input_bit, input_decimal;
-    private Button button_connect,button_disconnect;
-    private ToggleButton toggleButton_bit0,toggleButton_bit1,toggleButton_bit2,toggleButton_bit3;
-    private ToggleButton toggleButton_bit4,toggleButton_bit5,toggleButton_bit6,toggleButton_bit7;
-    private RadioButton radioButton_readMB,radioButton_writeMB;
-    private Spinner spinner_dataType;
-    private ListView listView_posttime;
-    private ArrayAdapter spinnerAdapter_dataType,listView_adapter;
-    private TextView textView_result;
-    private ConnectivityManager conMgr;
+    FloatingActionButton fab;
+    EditText input_IP, input_port,input_offset,input_bit, input_decimal;
+    Button button_connect,button_disconnect;
+    ToggleButton toggleButton_bit0,toggleButton_bit1,toggleButton_bit2,toggleButton_bit3;
+    ToggleButton toggleButton_bit4,toggleButton_bit5,toggleButton_bit6,toggleButton_bit7;
+    RadioButton radioButton_readMB,radioButton_writeMB;
+    Spinner spinner_dataType;
+    ListView listView_posttime;
+    ArrayAdapter spinnerAdapter_dataType,listView_adapter;
+    TextView textView_result;
+    ConnectivityManager conMgr;
     //XML field
 
     private Exception error;
@@ -517,20 +518,29 @@ public class MainActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         switch(id){
             case R.id.action_about:
+                int versionNumber = 0;
+                String versionName = "Cannot Get Version Name";
+                try{
+                    PackageInfo pinfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+                    versionNumber = pinfo.versionCode;
+                    versionName = pinfo.versionName;
+                }catch(PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
+                }
                 new AlertDialog.Builder(MainActivity.this)
                         .setTitle(R.string.action_about)
                         .setCancelable(false)
-                        .setMessage("Made By 中工三電乙 林宏哲")
+                        .setMessage("VersionCode: "+versionNumber+"\nVersionName: "+versionName+"\nMade By 中工三電乙 林宏哲")
                         .setPositiveButton(R.string.alertDialog_confirm, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
 
                             }
                         })
-                        .setNeutralButton(R.string.alertDialog_Facebook, new DialogInterface.OnClickListener() {
+                        .setNeutralButton("Check for New Version", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("http://fb.com/s94285")));
+                                startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("https://github.com/s94285/TcpTest1/")));
                             }
                         })
                         .show();

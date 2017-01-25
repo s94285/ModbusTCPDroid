@@ -4,9 +4,6 @@ import com.serotonin.modbus4j.ModbusMaster;
 import com.serotonin.modbus4j.code.DataType;
 import com.serotonin.modbus4j.code.RegisterRange;
 
-import java.io.ByteArrayOutputStream;
-import java.util.Objects;
-
 /**
  * Created by s94285 on 2016/10/14.
  *
@@ -29,19 +26,19 @@ import java.util.Objects;
  * for Modbus Read/Write Request with data convert
  */
 
-public class ModbusRW{
+class ModbusRW{
     private ModbusMaster modbusMaster;
     private final int SLAVE_ID = 1;
     private Exception mbNotInitialized = new Exception("Specific Modbus Master isn't initialized");
 
-    public ModbusRW(ModbusMaster modbusMaster){
+    ModbusRW(ModbusMaster modbusMaster){
         this.modbusMaster = modbusMaster;
     }
 
 
     /**Reading Values***************************************************************************/
 
-    public Boolean[] mbReadByteToBoolean(int offset) throws Exception{
+    Boolean[] mbReadByteToBoolean(int offset) throws Exception{
         int range = RegisterRange.HOLDING_REGISTER;
         Boolean[] mb = new Boolean[8];
         if(!modbusMaster.isInitialized()){
@@ -54,7 +51,7 @@ public class ModbusRW{
         return mb;
     }
 
-    public Boolean[] mbReadWordToBolean(int offset) throws Exception{
+    Boolean[] mbReadWordToBolean(int offset) throws Exception{
         int range = RegisterRange.HOLDING_REGISTER;
         Boolean[] mb = new Boolean[16];
         if(!modbusMaster.isInitialized()){
@@ -71,9 +68,9 @@ public class ModbusRW{
     }
 
     /** coz java's int is in 4 bytes, so I did this to fit PLC's INT (2 bytes)*/
-    public Integer mbReadINTToInteger(int offset) throws Exception{
+    Integer mbReadINTToInteger(int offset) throws Exception{
         int range = RegisterRange.HOLDING_REGISTER;
-        Short mb = 0;
+        Short mb;
         if(!modbusMaster.isInitialized()){
             throw mbNotInitialized;
         }else{
@@ -82,9 +79,9 @@ public class ModbusRW{
         return Integer.parseInt(mb.toString());
     }
 
-    public Integer mbReadDINTToInteger(int offset) throws Exception {
+    Integer mbReadDINTToInteger(int offset) throws Exception {
         int range = RegisterRange.HOLDING_REGISTER;
-        int mb = 0;
+        int mb;
         if (!modbusMaster.isInitialized()) {
             throw mbNotInitialized;
         } else {
@@ -93,9 +90,9 @@ public class ModbusRW{
         return mb;
     }
 
-    public Float mbReadREALToFloat(int offset) throws Exception{
+    Float mbReadREALToFloat(int offset) throws Exception{
         int range = RegisterRange.HOLDING_REGISTER;
-        float mb = 0;
+        float mb;
         if (!modbusMaster.isInitialized()) {
             throw mbNotInitialized;
         } else {
@@ -104,9 +101,9 @@ public class ModbusRW{
         return mb;
     }
 
-    public Double mbReadLREALToDouble(int offset) throws Exception{
+    Double mbReadLREALToDouble(int offset) throws Exception{
         int range = RegisterRange.HOLDING_REGISTER;
-        double mb = 0;
+        double mb;
         if (!modbusMaster.isInitialized()) {
             throw mbNotInitialized;
         } else {
@@ -119,7 +116,7 @@ public class ModbusRW{
     /**Writing Values************************************************************************/
 
 
-    public void mbWriteBooleanToBit(int offset, int bit, boolean bool) throws Exception{
+    void mbWriteBooleanToBit(int offset, int bit, boolean bool) throws Exception{
         byte Bit = Byte.parseByte(String.valueOf(bit));
         if (!modbusMaster.isInitialized()){
             throw mbNotInitialized;
@@ -128,16 +125,23 @@ public class ModbusRW{
         }
     }
 
-    public void mbWriteBoolArrayToByteWord(int offset, Boolean[] booleans) throws Exception{
+    void mbWriteBoolArrayToByte(int offset, Boolean[] booleans) throws Exception{
         if (!modbusMaster.isInitialized()){
             throw mbNotInitialized;
         } else {
-            for(byte bytes = 0; bytes < booleans.length; bytes++)
-                modbusMaster.setValue(SLAVE_ID, RegisterRange.HOLDING_REGISTER,offset,bytes,(booleans[bytes]));
+            modbusMaster.setValue(SLAVE_ID, RegisterRange.HOLDING_REGISTER, offset,DataType.BINARY,boolArrayToByte(booleans));
         }
     }
 
-    public void mbWriteShortToINT(int offset, short input) throws Exception{
+    void mbWriteBoolArrayToWord(int offset, Boolean[] booleans) throws Exception{
+        if (!modbusMaster.isInitialized()){
+            throw mbNotInitialized;
+        } else {
+            modbusMaster.setValue(SLAVE_ID, RegisterRange.HOLDING_REGISTER,offset,DataType.TWO_BYTE_INT_UNSIGNED,boolArrayToShort(booleans));
+        }
+    }
+
+    void mbWriteShortToINT(int offset, short input) throws Exception{
         if (!modbusMaster.isInitialized()){
             throw mbNotInitialized;
         } else {
@@ -145,7 +149,7 @@ public class ModbusRW{
         }
     }
 
-    public void mbWriteIntToDINT(int offset, int input) throws Exception{
+    void mbWriteIntToDINT(int offset, int input) throws Exception{
         if (!modbusMaster.isInitialized()){
             throw mbNotInitialized;
         } else {
@@ -153,7 +157,7 @@ public class ModbusRW{
         }
     }
 
-    public void mbWriteFloatToReal(int offset, float input) throws Exception{
+    void mbWriteFloatToReal(int offset, float input) throws Exception{
         if (!modbusMaster.isInitialized()){
             throw mbNotInitialized;
         } else {
@@ -161,7 +165,7 @@ public class ModbusRW{
         }
     }
 
-    public void mbWriteDoubleToLREAL(int offset, double input) throws Exception{
+    void mbWriteDoubleToLREAL(int offset, double input) throws Exception{
         if (!modbusMaster.isInitialized()){
             throw mbNotInitialized;
         } else {
@@ -171,12 +175,27 @@ public class ModbusRW{
 
     /********************************************************************************************/
 
-    public ModbusMaster getModbusMaster() {
+    ModbusMaster getModbusMaster() {
         return modbusMaster;
     }
 
-    public void setModbusMaster(ModbusMaster modbusMaster) {
+    void setModbusMaster(ModbusMaster modbusMaster) {
         this.modbusMaster = modbusMaster;
     }
 
+    byte boolArrayToByte(Boolean[] booleenArray){
+        int result = 0;
+        for(int i = 0; i < 8; i++){
+            result += (booleenArray[i]?1:0)<<i;
+        }
+        return Byte.parseByte(String.valueOf(result));
+    }
+
+    short boolArrayToShort(Boolean[] booleenArray){
+        int result = 0;
+        for(int i = 0; i < 16; i++){
+            result += (booleenArray[i]?1:0)<<i;
+        }
+        return Short.parseShort(String.valueOf(result));
+    }
 }
