@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String[] DATA_TYPE_SELECTIONS = {"Bit","Byte","Word","INT","DINT","REAL","LREAL"};
     private static final String[] POSTTIME_SELECTIONS = {"100 ms","200 ms","500 ms","1 second","2 seconds","5 seconds","10 seconds"};
-    private static final String DEFAULT_IP = "192.168.2.155";  //TODO: use preference page to change default
+    private static final String DEFAULT_IP = "192.168.0.129";  //TODO: use preference page to change default
 
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -178,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
                             break;
                         case "Word":
                             if(isInput){
-                                modbusRW.mbWriteShortToINT(offset,Short.parseShort(string_value));
+                                modbusRW.mbWriteIntToWORD(offset,Integer.parseInt(string_value));
                             }else{
                                 runOnUiThread(new Runnable() {
                                     @Override
@@ -269,10 +269,12 @@ public class MainActivity extends AppCompatActivity {
                         }
                         break;
                     case "Word":
-                        result = modbusRW.mbReadINTToInteger(offset).toString();
+                        final Boolean[] boolArray2= modbusRW.mbReadWordToBoolean(offset);
+                        //final Boolean[] boolArray2 = {true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true};
+                        result = String.valueOf(valueOfBoolArray(boolArray2));
                         break;
                     case "INT":
-                        result = modbusRW.mbReadINTToInteger(offset).toString();
+                        result = modbusRW.mbReadINTToShort(offset).toString();
                         break;
                     case "DINT":
                         result = modbusRW.mbReadDINTToInteger(offset).toString();

@@ -1,5 +1,7 @@
 package com.example.s94285.tcptest1;
 
+import android.util.Log;
+
 import com.serotonin.modbus4j.ModbusMaster;
 import com.serotonin.modbus4j.code.DataType;
 import com.serotonin.modbus4j.code.RegisterRange;
@@ -51,24 +53,23 @@ class ModbusRW{
         return mb;
     }
 
-    Boolean[] mbReadWordToBolean(int offset) throws Exception{
+    Boolean[] mbReadWordToBoolean(int offset) throws Exception{
         int range = RegisterRange.HOLDING_REGISTER;
         Boolean[] mb = new Boolean[16];
         if(!modbusMaster.isInitialized()){
             throw mbNotInitialized;
         }else{
-            for(byte bitLocation = 0;bitLocation<8;bitLocation++){
+            for(byte bitLocation = 0;bitLocation<16;bitLocation++){
                 mb[bitLocation] = modbusMaster.getValue(SLAVE_ID,range,offset,bitLocation);
+                //mb[(bitLocation+8)] = modbusMaster.getValue(SLAVE_ID,range,(offset+1),bitLocation);
             }
-            for(byte bitLocation = 0;bitLocation<8;bitLocation++){
-                mb[bitLocation+8] = modbusMaster.getValue(SLAVE_ID,range,offset+1,bitLocation);
-            }
-            }
+        }
+        Log.d("MRW",mb[8].toString());
         return mb;
     }
 
     /** coz java's int is in 4 bytes, so I did this to fit PLC's INT (2 bytes)*/
-    Integer mbReadINTToInteger(int offset) throws Exception{
+    Short mbReadINTToShort(int offset) throws Exception{
         int range = RegisterRange.HOLDING_REGISTER;
         Short mb;
         if(!modbusMaster.isInitialized()){
@@ -76,7 +77,7 @@ class ModbusRW{
         }else{
             mb = (Short)modbusMaster.getValue(SLAVE_ID,range,offset,DataType.TWO_BYTE_INT_SIGNED);
         }
-        return Integer.parseInt(mb.toString());
+        return mb;
     }
 
     Integer mbReadDINTToInteger(int offset) throws Exception {
@@ -146,6 +147,14 @@ class ModbusRW{
             throw mbNotInitialized;
         } else {
             modbusMaster.setValue(SLAVE_ID, RegisterRange.HOLDING_REGISTER,offset,DataType.TWO_BYTE_INT_SIGNED,input);
+        }
+    }
+
+    void mbWriteIntToWORD(int offset, int input) throws Exception{
+        if (!modbusMaster.isInitialized()){
+            throw mbNotInitialized;
+        } else {
+            modbusMaster.setValue(SLAVE_ID, RegisterRange.HOLDING_REGISTER,offset,DataType.TWO_BYTE_INT_UNSIGNED,input);
         }
     }
 
