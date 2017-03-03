@@ -207,4 +207,18 @@ class ModbusRW{
         }
         return Short.parseShort(String.valueOf(result));
     }
+
+    public Integer valueOfBoolArray(Boolean[] array){
+        int total = 0;
+        for(int i = 0;i < array.length; i++){
+            int mul = 1;
+            int x = 0;
+            while(x < i){
+                mul *= 2;
+                x++;
+            }
+            total += ((array[i])?1:0)*mul;
+        }
+        return total;
+    }
 }

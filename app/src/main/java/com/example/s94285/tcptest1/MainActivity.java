@@ -3,6 +3,7 @@ package com.example.s94285.tcptest1;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
@@ -70,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String[] DATA_TYPE_SELECTIONS = {"Bit","Byte","Word","INT","DINT","REAL","LREAL"};
     private static final String[] POSTTIME_SELECTIONS = {"100 ms","200 ms","500 ms","1 second","2 seconds","5 seconds","10 seconds"};
-    private static final String DEFAULT_IP = "192.168.0.129";  //TODO: use preference page to change default
+    private static final String DEFAULT_IP = "192.168.2.155";
 
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -87,9 +88,9 @@ public class MainActivity extends AppCompatActivity {
 
         //findViewById(R.id.content_main).requestFocus();
 
-        IP = DEFAULT_IP;
 
-        init();
+
+        initial(); //find view and get the listeners
         checkWifiConnection();
         createAlertDialog();
 
@@ -97,7 +98,15 @@ public class MainActivity extends AppCompatActivity {
         ipSlave.setHost(IP);
         ipSlave.setPort(502);
         modbusFactory = new ModbusFactory();
-
+        SharedPreferences preferences = getSharedPreferences("Preference",0);
+        String pref_IP = preferences.getString("IP","");
+        if(pref_IP.isEmpty()){
+            IP = DEFAULT_IP;
+        }else{
+            IP = pref_IP;
+            input_IP.setText(pref_IP);
+            input_IP.setHint("Default is "+pref_IP);
+        }
 
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -165,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
             if(radioButton_writeMB.isChecked())     //for Writing modbus if radioButton is selected
                 try{
                     Log.d("Spinner on","WriteMB");
-                    switch (DATA_TYPE_SELECTIONS[selectedDataType]){        //TODO: Working On
+                    switch (DATA_TYPE_SELECTIONS[selectedDataType]){
                         case "Bit" :
                             Log.d("Spinner on","First: Bit");
                             boolean value = (isInput)?string_value.equals("1") || string_value.equals("True") || string_value.equals("true"):readToggleButtonStatus()[0];
@@ -174,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
                         case "Byte" :
                             Log.d("Spinner on","Byte");
                             modbusRW.mbWriteShortToINT(offset,
-                                    (isInput)?Short.parseShort(string_value):valueOfBoolArray(readToggleButtonStatus()).shortValue());
+                                    (isInput)?Short.parseShort(string_value):modbusRW.valueOfBoolArray(readToggleButtonStatus()).shortValue());
                             break;
                         case "Word":
                             if(isInput){
@@ -258,7 +267,7 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case "Byte" :
                         final Boolean[] boolArray= modbusRW.mbReadByteToBoolean(offset);
-                        result = String.valueOf(valueOfBoolArray(boolArray));
+                        result = String.valueOf(modbusRW.valueOfBoolArray(boolArray));
                         if(radioButton_readMB.isChecked()){
                             runOnUiThread(new Runnable() {
                                 @Override
@@ -271,7 +280,7 @@ public class MainActivity extends AppCompatActivity {
                     case "Word":
                         final Boolean[] boolArray2= modbusRW.mbReadWordToBoolean(offset);
                         //final Boolean[] boolArray2 = {true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true};
-                        result = String.valueOf(valueOfBoolArray(boolArray2));
+                        result = String.valueOf(modbusRW.valueOfBoolArray(boolArray2));
                         break;
                     case "INT":
                         result = modbusRW.mbReadINTToShort(offset).toString();
@@ -296,7 +305,7 @@ public class MainActivity extends AppCompatActivity {
                 });
                 //modbusRW.mbWriteBoolArrayToByteWord(0,readToggleButtonStatus());
 
-                Log.d("Toggle",String.valueOf(valueOfBoolArray(readToggleButtonStatus())));
+                Log.d("Toggle",String.valueOf(modbusRW.valueOfBoolArray(readToggleButtonStatus())));
             }catch (Exception e){
                 Log.e("ModbusRW Exception",e.toString());
             }
@@ -333,21 +342,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private Integer valueOfBoolArray(Boolean[] array){
-        int total = 0;
-        for(int i = 0;i < array.length; i++){
-            int mul = 1;
-            int x = 0;
-            while(x < i){
-                mul *= 2;
-                x++;
-            }
-            total += ((array[i])?1:0)*mul;
-        }
-        return total;
-    }
 
-    private void init(){     //TODO: DO THIS FIRST
+    private void initial(){
         input_IP = (EditText)findViewById(R.id.input_IP);
         input_port = (EditText)findViewById(R.id.input_port);
         input_offset = (EditText)findViewById(R.id.input_offset);
@@ -592,6 +588,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onStop() {
         super.onStop();
+        SharedPreferences preferences = getSharedPreferences("Preference",0);
+        preferences.edit().putString("IP",input_IP.getText().toString()).commit();
         if(refresh_on) {
             refresh_on = false;
             fab.setImageResource(R.drawable.ic_media_play);
@@ -607,6 +605,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-
+        SharedPreferences preferences = getSharedPreferences("Preference",0);
+        preferences.edit().putString("IP",input_IP.getText().toString()).commit();
     }
 }
