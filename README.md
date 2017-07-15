@@ -1,4 +1,4 @@
-# TcpTest1
+# ModbusTCPDroid
 
 The app is for Reading/Writing PLC over ModbusTCP/IP using WiFi.<br>
 The app can connect to any kind of ModbusTCP/IP Slave.<br>
